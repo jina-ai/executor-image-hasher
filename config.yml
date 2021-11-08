@@ -1,0 +1,4 @@
+jtype: ImageHasher
+metas:
+  py_modules:
+    - executor.py
