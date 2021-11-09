@@ -1,3 +1,6 @@
+__copyright__ = 'Copyright (c) 2020-2021 Jina AI Limited. All rights reserved.'
+__license__ = 'Apache-2.0'
+
 from copy import deepcopy
 from typing import Iterable, Dict, Optional
 
@@ -14,7 +17,7 @@ class ImageHasher(Executor):
     def __init__(
         self,
         hash_type: str = 'perceptual',
-        hash_size: int = 4,
+        hash_size: int = 8,
         average_hash_args: Optional[Dict] = None,
         perceptual_hash_args: Optional[Dict] = None,
         wavelet_hash_args: Optional[Dict] = None,
@@ -55,14 +58,8 @@ class ImageHasher(Executor):
             parameters.get('traversal_paths', self.traversal_paths)
         ):
             if doc.blob is None:
-                self.logger.error(f'No blob passed for the Document: {doc.id}')
+                self.logger.error(f'No blob passed for the Document with id: {doc.id}')
                 continue
-
-            if doc.blob.shape[-1] != 3:
-                raise ValueError(
-                    "Your image must be of the format [H, W, C], in the RGB format (C=3),"
-                    f" but got shape={doc.blob.shape} instead."
-                )
 
             image = Image.fromarray(doc.blob)
             hash_hex = None
@@ -94,8 +91,8 @@ class ImageHasher(Executor):
 
             if hash_hex is not None:
                 if self.is_embed_bool:
-                    doc.embedding = np.array(hash_hex.hash).reshape(
-                        1, self.hash_size ** 2
+                    doc.embedding = np.squeeze(
+                        np.array(hash_hex.hash).reshape(1, self.hash_size ** 2)
                     )
                 else:
                     doc.embedding = np.squeeze(
