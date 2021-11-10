@@ -51,20 +51,13 @@ def test_contrast_match(hasher, docs_contrast):
         )
 
 
-def test_match_quality(hasher: ImageHasher, docs):
-    hasher.encode(docs=docs)
-    docs.match(docs, metric='euclidean', use_scipy=True)
-    matches = ['kids2', 'kids1', 'paprika2', 'paprika1']
-    for i, doc in enumerate(docs):
-        assert doc.matches[1].id == matches[i]
-
-
 @pytest.mark.parametrize(
     'hash_type', ['perceptual', 'average', 'wavelet', 'difference']
 )
 @pytest.mark.parametrize('hash_size', [8, 16])
-def test_hashing_technique(hash_type, hash_size, docs):
-    hasher = ImageHasher(hash_type=hash_type, hash_size=hash_size)
-    hasher.encode(docs=docs)
-    for doc in docs:
-        assert doc.embedding is not None
+def test_match_quality(hash_type, hash_size, hasher, docs):
+    hasher.encode(docs=docs, parameters={'hash_type': hash_type, 'hash_size': hash_size})
+    docs.match(docs, metric='euclidean', use_scipy=True)
+    matches = ['kids2', 'kids1', 'paprika2', 'paprika1']
+    for i, doc in enumerate(docs):
+        assert doc.matches[1].id == matches[i]
