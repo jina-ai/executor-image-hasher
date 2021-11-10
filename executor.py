@@ -14,6 +14,9 @@ HASH_TYPE = ['perceptual', 'average', 'difference', 'wavelet']
 
 
 class ImageHasher(Executor):
+    """
+    An executer to encode the images using the `comparable` hashing techniques
+    """
     def __init__(
         self,
         hash_type: str = 'perceptual',
@@ -25,6 +28,27 @@ class ImageHasher(Executor):
         traversal_paths: Iterable[str] = ('r',),
         **kwargs,
     ):
+        """
+        :param hash_type: the hashing technique used to encode the images. By default, set to `perceptual`.
+        Possible values are:
+        `perceptual` - http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html
+        `average` - https://web.archive.org/web/20171112054354/https://www.safaribooksonline.com/blog/2013/11/26/image-hashing-with-python/
+        `difference` - http://www.hackerfactor.com/blog/index.php?/archives/529-Kind-of-Like-That.html
+        `wavelet` - https://www.kaggle.com/c/avito-duplicate-ads-detection/
+        :param hash_size: the size of the encoded hash value. Should not be less than `2`
+        :param average_hash_args: the arguments for the `average` hash encoding type. By default `avg_pixels`
+        set to mean. The other possible value for `avg_pixels is `median`
+        For example: `average_hash_args={'avg_pixels': 'median'}`
+        :param perceptual_hash_args: the arguments for the `perceptual` hash encoding type. This dict should contain
+        `highfreq_factor` as the only key. The default value set is 4.
+        For example: `perceptual_hash_args={'highfreq_factors': 4}`
+        :param wavelet_hash_args: the arguments for `wavelet` hash encoding type. By default `image_scale` is equal
+         to max power of 2 for an input image and the `mode` is 'haar', which is Haar wavelets. The other possible
+         value for `mode` is db4 - Daubechies wavelets.
+         :param is_embed_bool: Set to `True` to encode the images into boolean embeddings using the hashing technique.
+         By default set to `False` to encode the images as `np.uint8` embeddings values.
+         :param traversal_paths: The default traversal path on docs, e.g. ['r'], ['c']
+        """
         super().__init__(**kwargs)
         if not hash_type or hash_type not in HASH_TYPE:
             raise ValueError('Please select one of the `hash_type`')
@@ -54,6 +78,20 @@ class ImageHasher(Executor):
 
     @requests
     def encode(self, docs: DocumentArray, parameters: Dict = {}, **kwargs):
+        """
+        Read the numpy arrays from the Document.blob, and encode it into an embeddings using the
+        comparable hashing technique. Features in the image are used to generate a distinct
+        (but not unique) fingerprint, and these fingerprints are comparable.
+
+        :param docs: A document array with documents to create embeddings for. Only the
+            documents that have the ``blob`` attribute will get embeddings. The ``blob``
+            attribute should be the numpy array of the image, and should have dtype
+            ``np.uint8``
+        :param parameters: A dictionary that contains parameters to control encoding.
+            The accepted keys are: `perceptual_hash_args`, `average_hash_args`, `wavelet_hash_args`,
+            and `traversal_paths`.
+            For example: `parameters={'average_hash_args': {'avg_pixels': 'median'}}`
+        """
         for doc in docs.traverse_flat(
             parameters.get('traversal_paths', self.traversal_paths)
         ):
