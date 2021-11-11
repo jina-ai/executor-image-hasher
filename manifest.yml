@@ -1,2 +1,5 @@
 manifest_version: 1
 name: ImageHasher
+description: An executor that encodes images using comparable hash functions
+url: https://github.com/jina-ai/executor-image-hasher
+keywords: [image, encode, hasher, perceptual, wavelet, difference, average]
