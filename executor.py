@@ -76,11 +76,6 @@ class ImageHasher(Executor):
         hash_func_args = deepcopy(self._hash_func_args)
         hash_func_args.update(parameters.get('hash_func_args', {}))
 
-        if not hash_type or hash_type not in HASH_TYPE:
-            raise ValueError(
-                f'Please select one of the available `hash_type`: {HASH_TYPE}'
-            )
-
         for doc in docs.traverse_flat(
             parameters.get('traversal_paths', self.traversal_paths)
         ):
@@ -104,23 +99,24 @@ class ImageHasher(Executor):
                     hash_hex = imagehash.phash(
                         image, hash_size=hash_size, **hash_func_args
                     )
-                else:
+                elif hash_type == 'dhash':
                     hash_hex = imagehash.dhash(image, hash_size=hash_size)
+                else:
+                    raise ValueError(
+                        f'Please select one of the available `hash_type`: {HASH_TYPE}'
+                    )
             except AssertionError as e:
                 self.logger.error(f'Image hashing failed, {e}')
 
             if hash_hex is not None:
                 if self.is_embed_bool:
-                    doc.embedding = np.squeeze(
-                        np.array(hash_hex.hash).reshape(1, hash_size ** 2)
-                    )
+                    embedding = np.array(hash_hex.hash).reshape(1, hash_size ** 2)
                 else:
-                    doc.embedding = np.squeeze(
-                        np.packbits(
-                            np.array(hash_hex.hash).reshape(1, hash_size ** 2),
-                            axis=1,
-                        )
+                    embedding = np.packbits(
+                        np.array(hash_hex.hash).reshape(1, hash_size ** 2),
+                        axis=1,
                     )
+                doc.embedding = np.squeeze(embedding)
             else:
                 self.logger.warning(f'Could not set embeddings for {doc.id}')
 
