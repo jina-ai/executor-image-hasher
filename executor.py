@@ -22,9 +22,7 @@ class ImageHasher(Executor):
         self,
         hash_type: str = 'phash',
         hash_size: int = 8,
-        average_hash_args: Optional[Dict] = None,
-        perceptual_hash_args: Optional[Dict] = None,
-        wavelet_hash_args: Optional[Dict] = None,
+        hash_func_args: Optional[Dict] = None,
         is_embed_bool: bool = False,
         traversal_paths: Iterable[str] = ('r',),
         **kwargs,
@@ -34,15 +32,11 @@ class ImageHasher(Executor):
         Possible values are: `perceptual`, `average`, `difference`, and `wavelet`.
         Implementation of the algorithm can be found here - https://github.com/JohannesBuchner/imagehash
         :param hash_size: the size of the encoded hash value. Should not be less than `2`
-        :param average_hash_args: the arguments for the `average` hash encoding type. By default `avg_pixels`
-        set to mean. The other possible value for `avg_pixels is `median`
-        For example: `average_hash_args={'avg_pixels': 'median'}`
-        :param perceptual_hash_args: the arguments for the `perceptual` hash encoding type. This dict should contain
-        `highfreq_factor` as the only key. The default value set is 4.
-        For example: `perceptual_hash_args={'highfreq_factors': 4}`
-        :param wavelet_hash_args: the arguments for `wavelet` hash encoding type. By default `image_scale` is equal
-         to max power of 2 for an input image and the `mode` is 'haar', which is Haar wavelets. The other possible
-         value for `mode` is db4 - Daubechies wavelets.
+        :param hash_func_args: the arguments for the hashing functions - `phash` and `whash`.
+         - This dict should contain `highfreq_factor` as the only key for `phash`. The default value set is 4.
+         - This dict should contain `image_scale` and `mode` as the key for `whash`.The default value for `image_scale`
+            is equal to max power of 2 for an input image and the `mode` is 'haar', which is Haar wavelets. The other
+             possible value for `mode` is db4 - Daubechies wavelets.
          :param is_embed_bool: Set to `True` to encode the images into boolean embeddings using the hashing technique.
          By default set to `False` to encode the images as `np.uint8` embeddings values.
          :param traversal_paths: The default traversal path on docs, e.g. ['r'], ['c']
@@ -54,22 +48,7 @@ class ImageHasher(Executor):
             )
         self.hash_type = hash_type
         self.hash_size = hash_size
-
-        self._average_hash_args = average_hash_args or {}
-        if 'avg_pixels' in self._average_hash_args:
-            if self._average_hash_args['avg_pixels'] == 'mean':
-                self._average_hash_args['mean'] = np.mean
-            else:
-                self._average_hash_args['mean'] = np.median
-            del self._average_hash_args['avg_pixels']
-
-        self._perceptual_hash_args = perceptual_hash_args or {}
-        self._perceptual_hash_args.setdefault('highfreq_factor', 4)
-
-        self._wavelet_hash_args = wavelet_hash_args or {}
-        self._wavelet_hash_args.setdefault('image_scale', None)
-        self._wavelet_hash_args.setdefault('mode', 'haar')
-
+        self._hash_func_args = hash_func_args or {}
         self.is_embed_bool = is_embed_bool
         self.traversal_paths = traversal_paths
         self.logger = JinaLogger(
@@ -87,14 +66,16 @@ class ImageHasher(Executor):
             documents that have the ``blob`` attribute will get embeddings. The ``blob``
             attribute should be the numpy array of the image, and should have dtype
             ``np.uint8``
-        :param parameters: A dictionary that contains parameters to control encoding.
-            The accepted keys are: `hash_type`, `hash_size`, `perceptual_hash_args`,
-            `average_hash_args`, `wavelet_hash_args`, and `traversal_paths`.
-            For example: `parameters={'hash_type': 'average', 'average_hash_args': {'avg_pixels': 'median'}}`
+        :param parameters: A dictionary that contains parameters to control hash encoding.
+            The accepted keys are: `hash_type`, `hash_size`, `hash_func_args`, and `traversal_paths`.
+            For example: `parameters={'hash_type': 'phash', 'hash_func_args': {'highfreq_factor': 8}}`
         """
         missing_blob = []
         hash_type = parameters.get('hash_type', self.hash_type)
         hash_size = parameters.get('hash_size', self.hash_size)
+        hash_func_args = deepcopy(self._hash_func_args)
+        hash_func_args.update(parameters.get('hash_func_args', {}))
+
         if not hash_type or hash_type not in HASH_TYPE:
             raise ValueError(
                 f'Please select one of the available `hash_type`: {HASH_TYPE}'
@@ -111,24 +92,17 @@ class ImageHasher(Executor):
             hash_hex = None
             try:
                 if hash_type == 'whash':
-                    wavelet_hash_args = deepcopy(self._wavelet_hash_args)
-                    wavelet_hash_args.update(parameters.get('wavelet_hash_args', {}))
                     hash_hex = imagehash.whash(
-                        image, hash_size=hash_size, **wavelet_hash_args
+                        image, hash_size=hash_size, **hash_func_args
                     )
                 elif hash_type == 'average_hash':
-                    average_hash_args = deepcopy(self._average_hash_args)
-                    average_hash_args.update(parameters.get('average_hash_args', {}))
                     hash_hex = imagehash.average_hash(
-                        image, hash_size=hash_size, **average_hash_args
+                        image,
+                        hash_size=hash_size,
                     )
                 elif hash_type == 'phash':
-                    perceptual_hash_args = deepcopy(self._perceptual_hash_args)
-                    perceptual_hash_args.update(
-                        parameters.get('perceptual_hash_args', {})
-                    )
                     hash_hex = imagehash.phash(
-                        image, hash_size=hash_size, **perceptual_hash_args
+                        image, hash_size=hash_size, **hash_func_args
                     )
                 else:
                     hash_hex = imagehash.dhash(image, hash_size=hash_size)
