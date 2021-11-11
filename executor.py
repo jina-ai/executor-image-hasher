@@ -28,8 +28,8 @@ class ImageHasher(Executor):
         **kwargs,
     ):
         """
-        :param hash_type: the hashing technique used to encode the images. By default, set to `perceptual`.
-        Possible values are: `perceptual`, `average`, `difference`, and `wavelet`.
+        :param hash_type: the hashing technique used to encode the images. By default, set to `phash`.
+        Possible values are: `phash`, `average_hash`, `dhash`, and `whash`.
         Implementation of the algorithm can be found here - https://github.com/JohannesBuchner/imagehash
         :param hash_size: the size of the encoded hash value. Should not be less than `2`
         :param hash_func_args: the arguments for the hashing functions - `phash` and `whash`.
