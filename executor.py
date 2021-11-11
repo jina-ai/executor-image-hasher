@@ -10,7 +10,7 @@ from PIL import Image
 from jina import Executor, DocumentArray, requests
 from jina.logging.logger import JinaLogger
 
-HASH_TYPE = ['perceptual', 'average', 'difference', 'wavelet']
+HASH_TYPE = ['phash', 'average_hash', 'dhash', 'whash']
 
 
 class ImageHasher(Executor):
@@ -20,7 +20,7 @@ class ImageHasher(Executor):
 
     def __init__(
         self,
-        hash_type: str = 'perceptual',
+        hash_type: str = 'phash',
         hash_size: int = 8,
         average_hash_args: Optional[Dict] = None,
         perceptual_hash_args: Optional[Dict] = None,
@@ -95,6 +95,10 @@ class ImageHasher(Executor):
         missing_blob = []
         hash_type = parameters.get('hash_type', self.hash_type)
         hash_size = parameters.get('hash_size', self.hash_size)
+        if not hash_type or hash_type not in HASH_TYPE:
+            raise ValueError(
+                f'Please select one of the available `hash_type`: {HASH_TYPE}'
+            )
 
         for doc in docs.traverse_flat(
             parameters.get('traversal_paths', self.traversal_paths)
@@ -106,19 +110,19 @@ class ImageHasher(Executor):
             image = Image.fromarray(doc.blob)
             hash_hex = None
             try:
-                if hash_type == 'wavelet':
+                if hash_type == 'whash':
                     wavelet_hash_args = deepcopy(self._wavelet_hash_args)
                     wavelet_hash_args.update(parameters.get('wavelet_hash_args', {}))
                     hash_hex = imagehash.whash(
                         image, hash_size=hash_size, **wavelet_hash_args
                     )
-                elif hash_type == 'average':
+                elif hash_type == 'average_hash':
                     average_hash_args = deepcopy(self._average_hash_args)
                     average_hash_args.update(parameters.get('average_hash_args', {}))
                     hash_hex = imagehash.average_hash(
                         image, hash_size=hash_size, **average_hash_args
                     )
-                elif hash_type == 'perceptual':
+                elif hash_type == 'phash':
                     perceptual_hash_args = deepcopy(self._perceptual_hash_args)
                     perceptual_hash_args.update(
                         parameters.get('perceptual_hash_args', {})
@@ -127,7 +131,7 @@ class ImageHasher(Executor):
                         image, hash_size=hash_size, **perceptual_hash_args
                     )
                 else:
-                    hash_hex = imagehash.phash(image, hash_size=hash_size)
+                    hash_hex = imagehash.dhash(image, hash_size=hash_size)
             except AssertionError as e:
                 self.logger.error(f'Image hashing failed, {e}')
 

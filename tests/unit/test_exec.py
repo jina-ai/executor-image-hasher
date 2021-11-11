@@ -15,7 +15,7 @@ cur_dir = os.path.dirname(os.path.abspath(__file__))
 
 def test_config():
     ex = Executor.load_config(str(Path(__file__).parents[2] / 'config.yml'))
-    assert ex.hash_type == 'perceptual'
+    assert ex.hash_type == 'phash'
     assert ex.hash_size == 8
 
 
@@ -52,9 +52,9 @@ def test_contrast_match(hasher, docs_contrast):
 
 
 @pytest.mark.parametrize(
-    'hash_type', ['perceptual', 'average', 'wavelet', 'difference']
+    'hash_type', ['phash', 'average_hash', 'whash', 'dhash']
 )
-@pytest.mark.parametrize('hash_size', [8, 16])
+@pytest.mark.parametrize('hash_size', [8])
 def test_match_quality(hash_type, hash_size, hasher, docs):
     hasher.encode(docs=docs, parameters={'hash_type': hash_type, 'hash_size': hash_size})
     docs.match(docs, metric='euclidean', use_scipy=True)
