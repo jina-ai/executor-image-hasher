@@ -24,7 +24,7 @@ class ImageHasher(Executor):
         hash_size: int = 8,
         hash_func_args: Optional[Dict] = None,
         is_embed_bool: bool = False,
-        traversal_paths: Iterable[str] = ('r',),
+        traversal_paths: str = 'r',
         **kwargs,
     ):
         """
@@ -39,7 +39,7 @@ class ImageHasher(Executor):
              possible value for `mode` is db4 - Daubechies wavelets.
          :param is_embed_bool: Set to `True` to encode the images into boolean embeddings using the hashing technique.
          By default set to `False` to encode the images as `np.uint8` embeddings values.
-         :param traversal_paths: The default traversal path on docs, e.g. ['r'], ['c']
+         :param traversal_paths: The default traversal path on docs, e.g. 'r', 'c'
         """
         super().__init__(**kwargs)
         if not hash_type or hash_type not in HASH_TYPE:
