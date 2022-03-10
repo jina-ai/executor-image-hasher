@@ -12,20 +12,18 @@ from executor import ImageHasher
 def test_integration(request_size: int):
     docs = DocumentArray(
         [
-            Document(blob=np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8))
+            Document(tensor=np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8))
             for _ in range(50)
         ]
     )
-    with Flow(return_results=True).add(uses=ImageHasher) as flow:
-        resp = flow.post(
+    with Flow().add(uses=ImageHasher) as flow:
+        da = flow.post(
             on="/encode",
             inputs=docs,
-            request_size=request_size,
-            return_results=True,
+            request_size=request_size
         )
 
-    assert sum(len(resp_batch.docs) for resp_batch in resp) == 50
-    for r in resp:
-        for doc in r.docs:
-            assert doc.embedding is not None
-            assert doc.embedding.shape == (8,)
+    assert len(da) == 50
+    for doc in da:
+        assert doc.embedding is not None
+        assert doc.embedding.shape == (8,)

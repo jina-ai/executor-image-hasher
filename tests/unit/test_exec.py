@@ -38,7 +38,7 @@ def test_embed_type(hasher, docs):
 
     hasher_bool = ImageHasher(is_embed_bool=True)
     hasher_bool.encode(docs=docs)
-    assert docs.embeddings.dtype == np.bool
+    assert docs.embeddings.dtype == bool
 
 
 def test_contrast_match(hasher, docs_contrast):

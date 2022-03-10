@@ -19,13 +19,13 @@ def hasher():
 def docs():
     return DocumentArray(
         [
-            Document(id='kids1', blob=np.array(Image.open((data_dir / 'kids1.jpg')))),
-            Document(id='kids2', blob=np.array(Image.open((data_dir / 'kids2.jpg')))),
+            Document(id='kids1', tensor=np.array(Image.open((data_dir / 'kids1.jpg')))),
+            Document(id='kids2', tensor=np.array(Image.open((data_dir / 'kids2.jpg')))),
             Document(
-                id='paprika1', blob=np.array(Image.open((data_dir / 'paprika1.png')))
+                id='paprika1', tensor=np.array(Image.open((data_dir / 'paprika1.png')))
             ),
             Document(
-                id='paprika2', blob=np.array(Image.open((data_dir / 'paprika2.png')))
+                id='paprika2', tensor=np.array(Image.open((data_dir / 'paprika2.png')))
             ),
         ]
     )
@@ -35,7 +35,7 @@ def docs():
 def docs_contrast():
     return DocumentArray(
         [
-            Document(id='ct1', blob=np.array(Image.open((data_dir / 'scene1.png')))),
-            Document(id='ct2', blob=np.array(Image.open((data_dir / 'scene2.png')))),
+            Document(id='ct1', tensor=np.array(Image.open((data_dir / 'scene1.png')))),
+            Document(id='ct2', tensor=np.array(Image.open((data_dir / 'scene2.png')))),
         ]
     )
