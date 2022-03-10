@@ -13,5 +13,5 @@ giving you a sense of similarity between the two data sets. All comparable hashe
 images can be scaled larger or smaller, have different aspect ratios, and even minor coloring differences (contrast,
 brightness, etc.) and they will still match similar images. A good usage of this is the detection of duplicate images.
 
-ImageHasher receives the `Documents` with `blob` attributes. The executor will encode the images into a vector of either
+ImageHasher receives the `Documents` with `tensor` attributes. The executor will encode the images into a vector of either
 `dtype=np.uint8` or `dtype=np.bool` and store them in the `embedding` attribute of the `Document`.
