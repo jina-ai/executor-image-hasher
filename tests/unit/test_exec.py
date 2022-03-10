@@ -60,5 +60,4 @@ def test_match_quality(hash_type, hash_size, hasher, docs):
     docs.match(docs, metric='euclidean', use_scipy=True)
     matches = ['kids2', 'kids1', 'paprika2', 'paprika1']
     for i, doc in enumerate(docs):
-        print(doc.matches[0].id)
         assert doc.matches[1].id == matches[i]
