@@ -24,7 +24,7 @@ class ImageHasher(Executor):
         hash_size: int = 8,
         hash_func_args: Optional[Dict] = None,
         is_embed_bool: bool = False,
-        traversal_paths: str = 'r',
+        traversal_paths: str = '@r',
         **kwargs,
     ):
         """
@@ -58,7 +58,7 @@ class ImageHasher(Executor):
     @requests
     def encode(self, docs: DocumentArray, parameters: Dict = {}, **kwargs):
         """
-        Read the numpy arrays from the Document.blob, and encode it into embeddings using the
+        Read the numpy arrays from the Document.tensor, and encode it into embeddings using the
         comparable hashing technique. Features in the image are used to generate a distinct
         (but not unique) fingerprint, and these fingerprints are comparable.
 
@@ -75,15 +75,14 @@ class ImageHasher(Executor):
         hash_size = parameters.get('hash_size', self.hash_size)
         hash_func_args = deepcopy(self._hash_func_args)
         hash_func_args.update(parameters.get('hash_func_args', {}))
+        path = parameters.get('traversal_paths', self.traversal_paths)
 
-        for doc in docs.traverse_flat(
-            parameters.get('traversal_paths', self.traversal_paths)
-        ):
-            if doc.blob is None:
+        for doc in docs[path]:
+            if doc.tensor is None:
                 missing_blob.append(doc.id)
                 continue
 
-            image = Image.fromarray(doc.blob)
+            image = Image.fromarray(doc.tensor)
             hash_hex = None
             try:
                 if hash_type == 'whash':

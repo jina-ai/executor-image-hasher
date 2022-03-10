@@ -38,7 +38,7 @@ def test_embed_type(hasher, docs):
 
     hasher_bool = ImageHasher(is_embed_bool=True)
     hasher_bool.encode(docs=docs)
-    assert docs.embeddings.dtype == np.bool
+    assert docs.embeddings.dtype == bool
 
 
 def test_contrast_match(hasher, docs_contrast):
@@ -60,4 +60,5 @@ def test_match_quality(hash_type, hash_size, hasher, docs):
     docs.match(docs, metric='euclidean', use_scipy=True)
     matches = ['kids2', 'kids1', 'paprika2', 'paprika1']
     for i, doc in enumerate(docs):
+        print(doc.matches[0].id)
         assert doc.matches[1].id == matches[i]
