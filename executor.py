@@ -10,6 +10,8 @@ from PIL import Image
 from jina import Executor, DocumentArray, requests
 from jina.logging.logger import JinaLogger
 
+import warnings
+
 HASH_TYPE = ['phash', 'average_hash', 'dhash', 'whash']
 
 
@@ -24,7 +26,8 @@ class ImageHasher(Executor):
         hash_size: int = 8,
         hash_func_args: Optional[Dict] = None,
         is_embed_bool: bool = False,
-        traversal_paths: str = '@r',
+        access_paths: str = '@r',
+        traversal_paths: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -39,7 +42,8 @@ class ImageHasher(Executor):
              possible value for `mode` is db4 - Daubechies wavelets.
          :param is_embed_bool: Set to `True` to encode the images into boolean embeddings using the hashing technique.
          By default set to `False` to encode the images as `np.uint8` embeddings values.
-         :param traversal_paths: The default traversal path on docs, e.g. 'r', 'c'
+         :param access_paths: The default traversal path on docs, e.g. 'r', 'c'
+         :param traversal_paths: please use access_paths
         """
         super().__init__(**kwargs)
         if not hash_type or hash_type not in HASH_TYPE:
@@ -50,7 +54,13 @@ class ImageHasher(Executor):
         self.hash_size = hash_size
         self._hash_func_args = hash_func_args or {}
         self.is_embed_bool = is_embed_bool
-        self.traversal_paths = traversal_paths
+        if traversal_paths is not None:
+            self.access_paths = traversal_paths
+            warnings.warn("'traversal_paths' will be deprecated in the future, please use 'access_paths'.",
+                          DeprecationWarning,
+                          stacklevel=2)
+        else:
+            self.access_paths = access_paths
         self.logger = JinaLogger(
             getattr(self.metas, 'name', self.__class__.__name__)
         ).logger
@@ -67,7 +77,7 @@ class ImageHasher(Executor):
             attribute should be the numpy array of the image, and should have dtype
             ``np.uint8``
         :param parameters: A dictionary that contains parameters to control hash encoding.
-            The accepted keys are: `hash_type`, `hash_size`, `hash_func_args`, and `traversal_paths`.
+            The accepted keys are: `hash_type`, `hash_size`, `hash_func_args`, and `access_paths`.
             For example: `parameters={'hash_type': 'phash', 'hash_func_args': {'highfreq_factor': 8}}`
         """
         missing_blob = []
@@ -75,7 +85,7 @@ class ImageHasher(Executor):
         hash_size = parameters.get('hash_size', self.hash_size)
         hash_func_args = deepcopy(self._hash_func_args)
         hash_func_args.update(parameters.get('hash_func_args', {}))
-        path = parameters.get('traversal_paths', self.traversal_paths)
+        path = parameters.get('access_paths', self.access_paths)
 
         for doc in docs[path]:
             if doc.tensor is None:
